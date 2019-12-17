@@ -1,11 +1,12 @@
 package iv.lib.validator;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Validator {
@@ -16,8 +17,19 @@ public class Validator {
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private List<String> messages = new LinkedList<>();
-    private List<NullField> fields = new LinkedList<>();
+    private List<String> messages;
+    private List<NullField> fields;
+
+    private Validator() {}
+
+    public static Validator create() {
+        Validator validator = new Validator();
+
+        validator.messages = new ArrayList<>();
+        validator.fields = new ArrayList<>();
+
+        return validator;
+    }
 
     public Validator notNullJSON(Object field, String name) {
         if (field == null)
@@ -56,7 +68,7 @@ public class Validator {
         return addField(fieldPath, FieldType.NULLABLE);
     }
 
-    public Validator validStructure(Object object) {
+    public Validator validJSON(Object object) {
         if (fields.isEmpty()) throw new IllegalArgumentException(FIELDS_LIST_EMPTY);
 
         fields.forEach(field -> {
@@ -65,7 +77,8 @@ public class Validator {
                 StringBuilder msg = new StringBuilder();
 
                 Field currentField;
-                for (String currentName : inner) {
+                for (int i = 0; i < inner.length; i++) {
+                    String currentName = inner[i];
                     currentField = object.getClass().getDeclaredField(currentName);
                     currentField.setAccessible(true);
                     msg.append(SEPARATOR.concat(currentName));
@@ -78,7 +91,7 @@ public class Validator {
                             }
                             break;
                         case NULLABLE:
-                            if (currentField.get(object) != null) {
+                            if (currentField.get(object) != null && i == inner.length-1) {
                                 mustNullJSON(true, msg.toString());
                                 break;
                             }
@@ -101,16 +114,24 @@ public class Validator {
         return buffer;
     }
 
+    public boolean isCorrect() {
+        return export().toString().isEmpty();
+    }
+
+    public boolean valid() {
+        return messages.size() == 0;
+    }
+
     public Validator reset() {
         return clearMessage().clearFields();
     }
 
-    private Validator clearMessage() {
+    public Validator clearMessage() {
         messages.clear();
         return this;
     }
 
-    private Validator clearFields() {
+    public Validator clearFields() {
         fields.clear();
         return this;
     }
