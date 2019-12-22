@@ -82,7 +82,7 @@ public class TestValidator {
         Assertions.assertTrue(validator.export().toString().isEmpty());
     }
 
-    // Вложенное поле оказывается NULL
+    // Вложенное и внешнее поле оказывается NULL
     @Test
     void innerDTOinnerFieldNull() {
         UserDTO user = UserDTO
@@ -101,5 +101,33 @@ public class TestValidator {
         Assertions.assertTrue(report.contains("password"));
         Assertions.assertTrue(report.contains("details.lastName"));
         Assertions.assertTrue(report.contains("details.age"));
+    }
+
+    // Вложенное и внешнее поле не NULL, хотя должны
+    @Test
+    void innerDTOnotNull() {
+        UserDTO user = UserDTO
+                .builder()
+                .login("login")
+                .password("password") // Must be NULL
+                .details(DetailsDTO.create(FIRST_NAME, LAST_NAME, 0L, 1,2,3)) // Magic must be NULL
+                .build();
+
+        // Создание валидатора "на ходу"
+        Validator validator = Validator.create()
+                                    .addField("login")
+                                    .addField("password", Validator.FieldType.NULLABLE)
+                                    .addField("details")
+                                    .addField("details.firstName")
+                                    .addField("details.lastName")
+                                    .addField("details.age")
+                                    .addField("details.magicNumbers", Validator.FieldType.NULLABLE);
+
+        validator.validJSON(user);
+        String report = validator.export().toString();
+
+        Assertions.assertFalse(validator.isCorrect());
+        Assertions.assertTrue(report.contains("password"));
+        Assertions.assertTrue(report.contains("details.magicNumbers"));
     }
 }
