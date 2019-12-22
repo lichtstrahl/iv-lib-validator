@@ -100,5 +100,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- JSR 305 Nullable/Notnull -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+
     </dependencies>
 </project>

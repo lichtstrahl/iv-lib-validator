@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +64,13 @@ public class Validator {
         return addField(fieldPath, FieldType.NOT_NULL);
     }
 
+    // Для вложенных структур
+    public Validator addChild(@Nullable Validator validator, String name) {
+        if (validator != null)
+            validator.fields.forEach(field -> addField(name.concat(SEPARATOR).concat(field.fieldPath), field.type));
+        return this;
+    }
+
     public Validator addNullField(String fieldPath) {
         return addField(fieldPath, FieldType.NULLABLE);
     }
@@ -75,29 +83,30 @@ public class Validator {
                 String[] inner = field.getFieldPath().split("\\" + SEPARATOR);
                 StringBuilder msg = new StringBuilder();
 
+                Object tmp = object;
                 Field currentField;
                 for (int i = 0; i < inner.length; i++) {
                     String currentName = inner[i];
-                    currentField = object.getClass().getDeclaredField(currentName);
+                    currentField = tmp.getClass().getDeclaredField(currentName);
                     currentField.setAccessible(true);
                     msg.append(SEPARATOR.concat(currentName));
 
                     switch (field.getType()) {
                         case NOT_NULL:
-                            if (currentField.get(object) == null) {
+                            if (currentField.get(tmp) == null) {
                                 notNullJSON(null, msg.toString());
                                 break;
                             }
                             break;
                         case NULLABLE:
-                            if (currentField.get(object) != null && i == inner.length-1) {
+                            if (currentField.get(tmp) != null && i == inner.length-1) {
                                 mustNullJSON(true, msg.toString());
                                 break;
                             }
                             break;
                     }
 
-
+                    tmp = currentField.get(tmp);
                 }
             } catch (Exception e) {
                 logger.error(e.getMessage());
