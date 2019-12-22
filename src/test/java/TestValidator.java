@@ -1,13 +1,21 @@
 import iv.lib.validator.Validator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-public class Test {
+public class TestValidator {
     public static void main(String[] args) {
         test1();
         test2();
         test3();
         test4();
+    }
+
+    @Test
+    public void testValidator() {
+        Assertions.assertNull(null);
+        Assertions.assertNotNull("");
     }
 
     private static void test1() {

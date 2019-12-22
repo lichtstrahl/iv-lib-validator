@@ -1,6 +1,5 @@
 package iv.lib.validator;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
